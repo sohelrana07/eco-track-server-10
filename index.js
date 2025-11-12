@@ -29,7 +29,8 @@ async function run() {
 
     const db = client.db("eco_db");
     const challengesCollection = db.collection("challenges");
-    const userChallenges = db.collection("userChallenges");
+    const userChallengesCollection = db.collection("userChallenges");
+    const recentTipsCollection = db.collection("recentTips");
 
     // get all challenges from database
     app.get("/challenges", async (req, res) => {
@@ -46,7 +47,7 @@ async function run() {
       res.send(result);
     });
 
-    // add data to database
+    // add challenge to database
     app.post("/challenges", async (req, res) => {
       const newChallenge = req.body;
       const result = await challengesCollection.insertOne(newChallenge);
@@ -57,7 +58,7 @@ async function run() {
     app.post("/challenge/join/:id", async (req, res) => {
       const joinChallenge = req.body;
       const challengeId = joinChallenge.challengeId;
-      const existing = await userChallenges.findOne({
+      const existing = await userChallengesCollection.findOne({
         challengeId: challengeId,
         userId: joinChallenge.userId,
       });
@@ -68,7 +69,7 @@ async function run() {
           .send({ message: "You have already joined this challenge" });
       }
 
-      const result = await userChallenges.insertOne(joinChallenge);
+      const result = await userChallengesCollection.insertOne(joinChallenge);
 
       // participants count
       const id = req.params.id;
@@ -91,7 +92,17 @@ async function run() {
     app.get("/myActivities", async (req, res) => {
       const user = req.query.userId;
       const filter = { userId: user };
-      const cursor = userChallenges.find(filter);
+      const cursor = userChallengesCollection.find(filter);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get resetTips from database
+    app.get("/recent", async (req, res) => {
+      const cursor = recentTipsCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(5);
       const result = await cursor.toArray();
       res.send(result);
     });
