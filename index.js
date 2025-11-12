@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -26,6 +26,32 @@ app.get("/", (req, res) => {
 async function run() {
   try {
     await client.connect();
+
+    const db = client.db("eco_db");
+    const challengesCollection = db.collection("challenges");
+
+    // get all challenges from database
+    app.get("/challenges", async (req, res) => {
+      const cursor = challengesCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get specific challenge from database
+    app.get("/challenges/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await challengesCollection.findOne(query);
+      res.send(result);
+    });
+
+    // add data to database
+    app.post("/challenges", async (req, res) => {
+      const newChallenge = req.body;
+      const result = await challengesCollection.insertOne(newChallenge);
+      res.send(result);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
