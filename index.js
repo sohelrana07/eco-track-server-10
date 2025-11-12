@@ -31,6 +31,7 @@ async function run() {
     const challengesCollection = db.collection("challenges");
     const userChallengesCollection = db.collection("userChallenges");
     const recentTipsCollection = db.collection("recentTips");
+    const eventsCollection = db.collection("events");
 
     // get all challenges from database
     app.get("/challenges", async (req, res) => {
@@ -51,6 +52,23 @@ async function run() {
     app.post("/challenges", async (req, res) => {
       const newChallenge = req.body;
       const result = await challengesCollection.insertOne(newChallenge);
+      res.send(result);
+    });
+
+    // update challenge to database
+    app.patch("/challenges/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: updateData,
+      };
+      const options = {};
+      const result = await challengesCollection.updateOne(
+        query,
+        update,
+        options
+      );
       res.send(result);
     });
 
@@ -97,12 +115,19 @@ async function run() {
       res.send(result);
     });
 
-    // get resetTips from database
+    // get recentTips from database
     app.get("/recent", async (req, res) => {
       const cursor = recentTipsCollection
         .find()
         .sort({ createdAt: -1 })
         .limit(5);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get upcomingEvents from database
+    app.get("/events", async (req, res) => {
+      const cursor = eventsCollection.find().sort({ date: 1 });
       const result = await cursor.toArray();
       res.send(result);
     });
