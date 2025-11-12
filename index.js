@@ -56,6 +56,18 @@ async function run() {
     // add userChallenge to database
     app.post("/challenge/join/:id", async (req, res) => {
       const joinChallenge = req.body;
+      const challengeId = joinChallenge.challengeId;
+      const existing = await userChallenges.findOne({
+        challengeId: challengeId,
+        userId: joinChallenge.userId,
+      });
+
+      if (existing) {
+        return res
+          .status(400)
+          .send({ message: "You have already joined this challenge" });
+      }
+
       const result = await userChallenges.insertOne(joinChallenge);
 
       // participants count
@@ -73,6 +85,15 @@ async function run() {
         options
       );
       res.send({ result, participantsCounted });
+    });
+
+    // get myActivities from database
+    app.get("/myActivities", async (req, res) => {
+      const user = req.query.userId;
+      const filter = { userId: user };
+      const cursor = userChallenges.find(filter);
+      const result = await cursor.toArray();
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
