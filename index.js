@@ -29,6 +29,7 @@ async function run() {
 
     const db = client.db("eco_db");
     const challengesCollection = db.collection("challenges");
+    const userChallenges = db.collection("userChallenges");
 
     // get all challenges from database
     app.get("/challenges", async (req, res) => {
@@ -50,6 +51,28 @@ async function run() {
       const newChallenge = req.body;
       const result = await challengesCollection.insertOne(newChallenge);
       res.send(result);
+    });
+
+    // add userChallenge to database
+    app.post("/challenge/join/:id", async (req, res) => {
+      const joinChallenge = req.body;
+      const result = await userChallenges.insertOne(joinChallenge);
+
+      // participants count
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $inc: {
+          participants: 1,
+        },
+      };
+      const options = {};
+      const participantsCounted = await challengesCollection.updateOne(
+        query,
+        update,
+        options
+      );
+      res.send({ result, participantsCounted });
     });
 
     await client.db("admin").command({ ping: 1 });
