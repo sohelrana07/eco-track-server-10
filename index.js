@@ -40,23 +40,44 @@ async function run() {
       res.send(result);
     });
 
-    // hero banner apis
-    app.get("/featured-challenges", async (req, res) => {
-      const cursor = challengesCollection
-        .find()
-        .sort({ participants: -1 })
-        .limit(5);
+    // Active Challenges from database
+    app.get("/active/challenges", async (req, res) => {
+      // const today = new Date();
+      // const query = { startDate: { $lte: today }, endDate: { $gte: today } };
+      const cursor = challengesCollection.find().limit(4);
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    // hero banner apis
-    app.get("/featured-challenges/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await challengesCollection.findOne(query);
-      res.send(result);
-    });
+    // app.get("/active/challenges", async (req, res) => {
+    //   try {
+    //     const today = new Date();
+    //     today.setHours(0,0,0,0); // time portion ignore
+
+    //     // 1️⃣ সব challenges fetch
+    //     const allChallenges = await challengesCollection.find().toArray();
+
+    //     // 2️⃣ filter only active challenges
+    //     const activeChallenges = allChallenges
+    //       .filter(ch => {
+    //         const start = new Date(ch.startDate);
+    //         const end = new Date(ch.endDate);
+
+    //         start.setHours(0,0,0,0);
+    //         end.setHours(0,0,0,0);
+
+    //         return today >= start && today <= end;
+    //       })
+    //       .sort((a,b) => new Date(a.startDate) - new Date(b.startDate)) // sort by startDate ascending
+    //       .slice(0, 5); // limit 5
+
+    //     res.send(activeChallenges);
+
+    //   } catch(err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: "Failed to fetch active challenges" });
+    //   }
+    // });
 
     // get specific challenge from database
     app.get("/challenges/:id", async (req, res) => {
@@ -132,6 +153,24 @@ async function run() {
       res.send({ result, participantsCounted });
     });
 
+    // hero banner apis
+    app.get("/featured-challenges", async (req, res) => {
+      const cursor = challengesCollection
+        .find()
+        .sort({ participants: -1 })
+        .limit(5);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // hero banner apis
+    app.get("/featured-challenges/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await challengesCollection.findOne(query);
+      res.send(result);
+    });
+
     // get myActivities from database
     app.get("/myActivities", async (req, res) => {
       const user = req.query.userId;
@@ -141,8 +180,32 @@ async function run() {
       res.send(result);
     });
 
+    // update specific activity to database
+    app.patch("/myActivities/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const update = {
+        $set: updateData,
+      };
+      const options = {};
+      const result = await userChallengesCollection.updateOne(
+        filter,
+        update,
+        options
+      );
+      res.send(result);
+    });
+
     // get recentTips from database
-    app.get("/recent", async (req, res) => {
+    app.get("/tips", async (req, res) => {
+      const cursor = recentTipsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get recentTips from database
+    app.get("/recent-tips", async (req, res) => {
       const cursor = recentTipsCollection
         .find()
         .sort({ createdAt: -1 })
@@ -151,8 +214,15 @@ async function run() {
       res.send(result);
     });
 
-    // get upcomingEvents from database
+    // get Events from database
     app.get("/events", async (req, res) => {
+      const cursor = eventsCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // get upcomingEvents from database
+    app.get("/upcoming/events", async (req, res) => {
       const cursor = eventsCollection.find().sort({ date: 1 });
       const result = await cursor.toArray();
       res.send(result);
