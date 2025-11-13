@@ -40,6 +40,24 @@ async function run() {
       res.send(result);
     });
 
+    // hero banner apis
+    app.get("/featured-challenges", async (req, res) => {
+      const cursor = challengesCollection
+        .find()
+        .sort({ participants: -1 })
+        .limit(5);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // hero banner apis
+    app.get("/featured-challenges/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await challengesCollection.findOne(query);
+      res.send(result);
+    });
+
     // get specific challenge from database
     app.get("/challenges/:id", async (req, res) => {
       const id = req.params.id;
@@ -69,6 +87,14 @@ async function run() {
         update,
         options
       );
+      res.send(result);
+    });
+
+    // delete specific challenge
+    app.delete("/challenges/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await challengesCollection.deleteOne(query);
       res.send(result);
     });
 
