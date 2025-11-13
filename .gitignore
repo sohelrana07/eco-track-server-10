@@ -1,2 +1,4 @@
 node_modules
 .env
+eco-track-firebase-admin-sdk.json
+.vercel
